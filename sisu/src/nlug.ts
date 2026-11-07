@@ -37,6 +37,9 @@ const nluMapping: NLUMapping = {
       content: "LT2319",
     },
   ],
+  friday: [{ type: "answer", content: "friday" }], // [lab2] [Task 1] Understand a day answer.
+  thursday: [{ type: "answer", content: "thursday" }],
+  tuesday: [{ type: "answer", content: "tuesday" }],
 };
 const nlgMapping: NLGMapping = [
   [{ type: "ask", content: WHQ("booking_course") }, "Which course?"],
@@ -54,6 +57,16 @@ const nlgMapping: NLGMapping = [
       content: { predicate: "booking_room", argument: "G212" },
     },
     "The lecture is in G212.",
+  ],
+  [{ type: "icm", content: "sem*neg" }, "Sorry, I didn't understand."], // [lab2] [Task 2] Apology when the utterance is not understood.
+  [{ type: "icm", content: "con*neg" }, "Are you there?"], // [lab2] [VG-A] Negative contact.
+  [{ type: "ask", content: WHQ("booking_day") }, "Which day?"], // [lab2] [Task 1] Ask which day.
+  [
+    {
+      type: "answer",
+      content: { predicate: "booking_room", argument: "J440" },
+    },
+    "The lecture is in J440.", // [lab2] [Task 1] Say the Thursday and Tuesday room.
   ],
 ];
 

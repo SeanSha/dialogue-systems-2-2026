@@ -56,7 +56,10 @@ describe("DME tests", () => {
                   type: "SAYS",
                   value: {
                     speaker: "usr",
-                    moves: nlu(event.value),
+                    moves: 
+                      event.value === "(silence)" 
+                      ? [{type: "icm", content: "con*neg"}]
+                      : nlu(event.value),
                   },
                 }),
                 { delay: 1000 }
@@ -133,13 +136,86 @@ describe("DME tests", () => {
     ]);
   });
 
-  describe("system answer from database", () => {
+  // [lab2] [Task 1] Friday and Dialogue Systems 2 resolve to G212.
+  describe("room depends on day: Friday", () => {
     runTest([
       { speaker: "sys", message: "Hello! You can ask me anything!" },
       { speaker: "usr", message: "Where is the lecture?" },
+      { speaker: "sys", message: "Which day?" },
+      { speaker: "usr", message: "Friday" },
       { speaker: "sys", message: "Which course?" },
       { speaker: "usr", message: "Dialogue Systems 2" },
       { speaker: "sys", message: "The lecture is in G212." },
     ]);
   });
+
+  // [lab2] [Task 1] Thursday and Dialogue Systems 2 resolve to J440.
+  describe("room depends on day: Thursday", () => {
+    runTest([
+      { speaker: "sys", message: "Hello! You can ask me anything!" },
+      { speaker: "usr", message: "Where is the lecture?" },
+      { speaker: "sys", message: "Which day?" },
+      { speaker: "usr", message: "Thursday" },
+      { speaker: "sys", message: "Which course?" },
+      { speaker: "usr", message: "Dialogue Systems 2" },
+      { speaker: "sys", message: "The lecture is in J440." },
+    ]);
+  });
+
+  // [lab2] [Task 2] An unknown utterance gets an apology, and the open question is repeated.
+  describe("negative understanding", () => {
+    runTest([
+      { speaker: "sys", message: "Hello! You can ask me anything!" },
+      { speaker: "usr", message: "bla bla" },
+      { speaker: "sys", message: "Sorry, I didn't understand." },
+      { speaker: "usr", message: "Where is the lecture?" },
+      { speaker: "sys", message: "Which day?" },
+      { speaker: "usr", message: "bla bla" },
+      { speaker: "sys", message: "Sorry, I didn't understand. Which day?" },
+    ]);
+  });
+  
+  // [lab2] [Task 2] After several unknown utterances, Friday and Dialogue Systems 2 still resolve to G212.
+  describe("room after repeated questions", () => {
+    runTest([
+      { speaker: "sys", message: "Hello! You can ask me anything!" },
+      { speaker: "usr", message: "bla bla" },
+      { speaker: "sys", message: "Sorry, I didn't understand." },
+      { speaker: "usr", message: "Where is the lecture?" },
+      { speaker: "sys", message: "Which day?" },
+      { speaker: "usr", message: "bla bla" },
+      { speaker: "sys", message: "Sorry, I didn't understand. Which day?" },
+      { speaker: "usr", message: "Friday" },
+      { speaker: "sys", message: "Which course?" },
+      { speaker: "usr", message: "bla bla" },
+      { speaker: "sys", message: "Sorry, I didn't understand. Which course?" },
+      { speaker: "usr", message: "Dialogue Systems 2" },
+      { speaker: "sys", message: "The lecture is in G212." },
+    ]);
+  });
+
+    // [lab2] [VG-A] No contact before any question.
+  describe("negative contact", () => {
+    runTest([
+      { speaker: "sys", message: "Hello! You can ask me anything!" },
+      { speaker: "usr", message: "(silence)" },
+      { speaker: "sys", message: "Are you there?" },
+    ]);
+  });
+
+  // [lab2] [VG-A] No contact while a question is open, then still find the room.
+  describe("contact failure then room", () => {
+    runTest([
+      { speaker: "sys", message: "Hello! You can ask me anything!" },
+      { speaker: "usr", message: "Where is the lecture?" },
+      { speaker: "sys", message: "Which day?" },
+      { speaker: "usr", message: "(silence)" },
+      { speaker: "sys", message: "Are you there? Which day?" },
+      { speaker: "usr", message: "Friday" },
+      { speaker: "sys", message: "Which course?" },
+      { speaker: "usr", message: "Dialogue Systems 2" },
+      { speaker: "sys", message: "The lecture is in G212." },
+    ]);
+  });
+
 });

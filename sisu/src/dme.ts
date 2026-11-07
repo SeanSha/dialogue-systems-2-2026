@@ -82,6 +82,8 @@ export const dme = setup({
         },
         SelectMove: {
           always: [
+            isuTransition("SelectionDone", "select_icm"), // [lab2] [Task 2] Select the apology move.
+            isuTransition("SelectionDone", "select_no_contact"), // [lab2] [VG-A] Select the contact check.            
             isuTransition("SelectionDone", "select_ask"),
             isuTransition("SelectionDone", "select_answer"),
             isuTransition("SelectionDone", "select_other"),
@@ -122,6 +124,8 @@ export const dme = setup({
             isuTransition("DowndateQUD", "integrate_usr_ask"),
             isuTransition("DowndateQUD", "integrate_answer"),
             isuTransition("DowndateQUD", "integrate_greet"),
+            isuTransition("DowndateQUD", "integrate_not_understood"), // [lab2] [Task 2] Handle an utterance NLU did not parse.
+            isuTransition("DowndateQUD", "integrate_no_contact"), // [lab2] [VG-A] Handle a contact failure.
             { target: "DowndateQUD" },
           ],
         },

@@ -1,96 +1,264 @@
+/* [Extra] Chat page styles. */
+
 :root {
+  color-scheme: light dark;
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --bg: #f4f1ea;
+  --panel: #fffdf8;
+  --ink: #1d1a16;
+  --muted: #6d655c;
+  --line: #e4ddd2;
+  --sys: #efeae2;
+  --usr: #1d1a16;
+  --usr-ink: #fffdf8;
+  --status: #efe7d6;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161412;
+    --panel: #211e1b;
+    --ink: #f6f1e8;
+    --muted: #b3a89c;
+    --line: #3a342e;
+    --sys: #2c2824;
+    --usr: #f3eadc;
+    --usr-ink: #1d1a16;
+    --status: #3a332b;
+  }
 }
-a:hover {
-  color: #535bf2;
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  background: var(--bg);
+  color: var(--ink);
 }
 
 #app {
-  max-width: 1280px;
+  min-height: 100vh;
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  width: min(760px, 100%);
+  height: 100vh;
   margin: 0 auto;
-  padding: 2rem;
+  overflow: hidden;
+  background: var(--panel);
+  border-inline: 1px solid var(--line);
+}
+
+.top,
+.dock {
+  padding: 1.25rem 1.5rem;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.eyebrow,
+.hint,
+.who,
+.status {
+  margin: 0;
+  color: var(--muted);
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0.15rem 0 0;
+  font-size: 1.6rem;
+  line-height: 1.1;
+  font-weight: 650;
+}
+
+.status {
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: var(--status);
+  color: var(--ink);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.log {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overflow-anchor: none;
+}
+
+.transcript {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-height: 100%;
+  padding: 1.5rem;
+}
+
+.empty {
+  margin: auto;
+  max-width: 28rem;
   text-align: center;
+  color: var(--muted);
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vanilla:hover {
-  filter: drop-shadow(0 0 2em #3178c6aa);
+.bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  max-width: min(34rem, 85%);
+  padding: 0.75rem 0.9rem;
+  border-radius: 1rem;
 }
 
-.card {
-  padding: 2em;
+.bubble p {
+  margin: 0;
+  white-space: pre-wrap;
 }
 
-.read-the-docs {
-  color: #888;
+.bubble.sys {
+  align-self: flex-start;
+  background: var(--sys);
+  border-bottom-left-radius: 0.3rem;
+}
+
+.bubble.usr {
+  align-self: flex-end;
+  background: var(--usr);
+  color: var(--usr-ink);
+  border-bottom-right-radius: 0.3rem;
+}
+
+.bubble.usr .who {
+  color: inherit;
+  opacity: 0.72;
+}
+
+.who {
+  font-size: 0.75rem;
+}
+
+.dock {
+  flex-shrink: 0;
+  border-top: 1px solid var(--line);
+}
+
+.dock-actions {
+  display: flex;
+  gap: 0.6rem;
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  width: 100%;
+  min-height: 3.25rem;
+  border: 0;
+  border-radius: 0.9rem;
+  padding: 0.8rem 1.2rem;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 650;
+  color: var(--usr-ink);
+  background: var(--usr);
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.dock-actions > button {
+  width: auto;
+}
+
+#counter {
+  flex: 1;
+}
+
+#end {
+  flex: 0 0 auto;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line);
+}
+
+.machines {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 0.75rem;
+  max-height: 38vh;
+  padding: 0.9rem 1.5rem;
+  overflow: auto;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.machine h2 {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.states {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.state {
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  font-size: 0.85rem;
+}
+
+.state.current {
+  border-color: transparent;
+  background: #2f6b4f;
+  color: #f4fff8;
+  font-weight: 650;
+}
+
+.arrow,
+.path {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.path {
+  margin: 0.3rem 0 0;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.hint {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
 }

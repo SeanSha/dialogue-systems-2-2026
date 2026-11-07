@@ -69,13 +69,19 @@ export const rules: Rules = {
       for (const move of is.shared.lu!.moves) {
         if (move.type === "ask") {
           const q = move.content;
-          return () => ({
-            ...is,
-            shared: {
-              ...is.shared,
-              qud: [q, ...is.shared.qud],
-            },
-          });
+          // [lab2] [Task 2] Keep a repeated question from being pushed onto the QUD again.
+          const alreadyThere = is.shared.qud.some((existing) =>
+            objectsEqual(existing, q),
+          );
+          if (!alreadyThere) {
+            return () => ({
+              ...is,
+              shared: {
+                ...is.shared,
+                qud: [q, ...is.shared.qud],
+              },
+            });
+          }
         }
       }
     }
@@ -137,6 +143,26 @@ export const rules: Rules = {
           ...is,
         });
       }
+    }
+  },
+
+  /** [lab2] [Task 2] Turn an empty user move list into an apology action. */
+  integrate_not_understood: ({ is }) => {
+    const lu = is.shared.lu;
+    if (
+      lu &&
+      lu.speaker === "usr" &&
+      Array.isArray(lu.moves) &&
+      lu.moves.length === 0
+    ) {
+      const icm: Action = {type: "icm", content: null};
+      return () => ({
+        ...is,
+        private: {
+          ...is.private,
+          agenda: [icm, ...is.private.agenda],
+        }
+      });
     }
   },
 
@@ -330,4 +356,71 @@ export const rules: Rules = {
       });
     }
   },
+
+  /** [lab2] [Task 2] Apologise, then repeat the unanswered plan question. */
+  select_icm: ({ is }) => {
+    if (is.private.agenda[0] && is.private.agenda[0].type === "icm") {
+      const moves: Move[] = [{ type: "icm", content: "sem*neg" }];
+      const step = is.private.plan[0];
+      if (
+        step &&
+        (step.type === "findout" || step.type === "raise") &&
+        step.content
+      ) {
+        moves.push({ type: "ask", content: step.content });
+      }
+      return () => ({
+        ...is,
+        next_moves: [...is.next_moves, ...moves],
+        private: {
+          ...is.private,
+          agenda: is.private.agenda.slice(1),
+        },
+      });
+    }
+
+  },
+
+    /** [lab2] [VG-A] No speech was received. */
+  integrate_no_contact: ({ is }) => {
+    const lu = is.shared.lu;
+    if (lu && lu.speaker === "usr") {
+      for (const move of lu.moves) {
+        if (move.type === "icm" && move.content === "con*neg") {
+          const action: Action = { type: "no_contact", content: null };
+          return () => ({
+            ...is,
+            private: {
+              ...is.private,
+              agenda: [action, ...is.private.agenda],
+            },
+          });
+        }
+      }
+    }
+  },
+
+  /** [lab2] [VG-A] Ask if the user is there, then repeat the open question. */
+  select_no_contact: ({ is }) => {
+    if (is.private.agenda[0] && is.private.agenda[0].type === "no_contact") {
+      const moves: Move[] = [{ type: "icm", content: "con*neg" }];
+      const step = is.private.plan[0];
+      if (
+        step &&
+        (step.type === "findout" || step.type === "raise") &&
+        step.content
+      ) {
+        moves.push({ type: "ask", content: step.content });
+      }
+      return () => ({
+        ...is,
+        next_moves: [...is.next_moves, ...moves],
+        private: {
+          ...is.private,
+          agenda: is.private.agenda.slice(1),
+        },
+      });
+    }
+  },
+
 };

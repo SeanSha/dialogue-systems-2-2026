@@ -28,7 +28,7 @@ export type Question = WhQuestion;
 type WhQuestion = { type: "whq"; predicate: string };
 
 interface OtherMove {
-  type: "greet" | "request";
+  type: "greet" | "request" | "icm"; // [lab2] [Task 2] Move for negative understanding.
   content: null | string;
 }
 interface AnswerMove {
@@ -48,7 +48,9 @@ export type Action = {
     | "respond" // not to be used in plans
     | "raise"
     | "findout"
-    | "consultDB";
+    | "consultDB"
+    | "icm" // [lab2] [Task 2] Agenda action that triggers the apology.
+    | "no_contact"; // [lab2] [VG-A] Agenda action for no contact.
   content: null | Question;
 };
 
@@ -86,6 +88,8 @@ export interface TotalInformationState {
 
 export type DMEvent =
   | { type: "CLICK" }
+  // [Extra] End-dialogue event.
+  | { type: "END" }
   | SpeechStateExternalEvent
   | NextMovesEvent;
 
