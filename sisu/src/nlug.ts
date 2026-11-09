@@ -6,7 +6,7 @@ interface NLUMapping {
 }
 type NLGMapping = [Move, string][];
 
-const nluMapping: NLUMapping = {
+export const nluMapping: NLUMapping = {
   "where is the lecture?": [
     {
       type: "ask",
@@ -41,6 +41,7 @@ const nluMapping: NLUMapping = {
   thursday: [{ type: "answer", content: "thursday" }],
   tuesday: [{ type: "answer", content: "tuesday" }],
 };
+
 const nlgMapping: NLGMapping = [
   [{ type: "ask", content: WHQ("booking_course") }, "Which course?"],
   [{ type: "greet", content: null }, "Hello! You can ask me anything!"],

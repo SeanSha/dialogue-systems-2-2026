@@ -1,8 +1,9 @@
-import { createActor, setup, AnyMachineSnapshot, sendTo, assign } from "xstate";
+import { createActor, setup, AnyMachineSnapshot, sendTo, assign, fromPromise } from "xstate";
 import { Settings, speechstate } from "speechstate";
 import { KEY, REGION } from "./azure";
-import { DMContext, DMEvent, NextMovesEvent } from "./types";
-import { nlg, nlu } from "./nlug";
+import { DMContext, DMEvent, Move, NextMovesEvent } from "./types";
+import { nlg } from "./nlug";
+import { ensureNluSeeded, nluWithRetrieval } from "./nlu-qdrant";
 import { dme } from "./dme";
 import { initialIS } from "./is";
 
@@ -59,6 +60,8 @@ const azureCredentials = {
 
 // [Extra] Whether this listen turn heard speech.
 let heardThisTurn = false;
+// [lab2] [VG-B] Moves for the utterance just heard. Retrieval is async, so speaking waits for this.
+let pendingMoves: Promise<Move[]> = Promise.resolve([]);
 
 const settings: Settings = {
   azureCredentials: azureCredentials,
@@ -73,6 +76,7 @@ const settings: Settings = {
 const dmMachine = setup({
   actors: {
     dme: dme,
+    understand: fromPromise(async () => pendingMoves),
   },
   actions: {
     speak_next_moves: ({ context, event }) => {
@@ -87,6 +91,7 @@ const dmMachine = setup({
     },
     listen: ({ context }) => {
       heardThisTurn = false; // [Extra] Reset before a new listen turn.
+      pendingMoves = Promise.resolve([]);
       context.ssRef.send({
         type: "LISTEN",
       });
@@ -165,17 +170,7 @@ const dmMachine = setup({
                     reenter: true,
                     actions: "listen",
                   },
-                  {
-                    target: "Idle",
-                    actions: sendTo("dmeID", ({ context }) => ({
-                      type: "SAYS",
-                      value: {
-                        speaker: "usr",
-                        // [Extra] Empty move list when nothing was recognised.
-                        moves: context.lastUserMoves ?? [],
-                      },
-                    })),
-                  },
+                  { target: "Understanding" },
                 ],
                 RECOGNISED: {
                   actions: [
@@ -188,15 +183,44 @@ const dmMachine = setup({
                         pushChatLine("usr", event.value[0]?.utterance ?? "");
                       }
                     },
-                    assign(({ event }) => ({
-                      lastUserMoves:
+                    // [lab2] [VG-B] Near-miss sentences go to Qdrant. Exact sentences stay on the table.
+                    ({ event }) => {
+                      const utterance =
                         event.type === "RECOGNISED"
-                          ? nlu(event.value[0].utterance)
-                          : [],
-                    })),
+                          ? (event.value[0]?.utterance ?? "")
+                          : "";
+                      pendingMoves = nluWithRetrieval(utterance);
+                    },
                   ],
                 },
                 ASR_NOINPUT: {}, // [Extra] Ignore no-input timeouts.
+              },
+            },
+            Understanding: {
+              invoke: {
+                src: "understand",
+                onDone: {
+                  target: "Idle",
+                  actions: [
+                    assign(({ event }) => ({
+                      lastUserMoves: event.output as Move[],
+                    })),
+                    sendTo("dmeID", ({ event }) => ({
+                      type: "SAYS",
+                      value: {
+                        speaker: "usr",
+                        moves: event.output as Move[],
+                      },
+                    })),
+                  ],
+                },
+                onError: {
+                  target: "Idle",
+                  actions: sendTo("dmeID", () => ({
+                    type: "SAYS",
+                    value: { speaker: "usr", moves: [] },
+                  })),
+                },
               },
             },
           },
@@ -249,6 +273,14 @@ const dmMachine = setup({
 
 // [Extra] Actor without the Stately inspector.
 export const dmActor = createActor(dmMachine).start();
+
+// [lab2] [VG-B] Fill Qdrant before the first near-miss sentence. Failure leaves the exact table in place.
+void ensureNluSeeded().catch((error) => {
+  console.warn(
+    "[VG-B] Qdrant seed failed. Near-miss sentences stay on the exact table.",
+    error,
+  );
+});
 
 // [Extra] DM, speechstate, and dme states for the page.
 export type MachineView = {
