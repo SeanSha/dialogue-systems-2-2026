@@ -63,6 +63,13 @@ let heardThisTurn = false;
 // [lab2] [VG-B] Moves for the utterance just heard. Retrieval is async, so speaking waits for this.
 let pendingMoves: Promise<Move[]> = Promise.resolve([]);
 
+// [lab2] [VG-A] No speech in this listen turn. Same move the tests send for "(silence)".
+function reportNoContact() {
+  heardThisTurn = true;
+  pendingMoves = Promise.resolve([{ type: "icm", content: "con*neg" }]);
+  pushChatLine("usr", "(silence)");
+}
+
 const settings: Settings = {
   azureCredentials: azureCredentials,
   asrDefaultCompleteTimeout: 0,
@@ -162,13 +169,14 @@ const dmMachine = setup({
             },
             Recognising: {
               on: {
-                // [Extra] If nothing was heard, listen again.
+                // [lab2] [VG-A] Nothing was heard: ask "Are you there?" instead of listening forever.
                 LISTEN_COMPLETE: [
                   {
                     guard: () => !heardThisTurn,
-                    target: "Recognising",
-                    reenter: true,
-                    actions: "listen",
+                    target: "Understanding",
+                    actions: () => {
+                      reportNoContact();
+                    },
                   },
                   { target: "Understanding" },
                 ],
@@ -193,7 +201,14 @@ const dmMachine = setup({
                     },
                   ],
                 },
-                ASR_NOINPUT: {}, // [Extra] Ignore no-input timeouts.
+                // [lab2] [VG-A] The microphone timed out with no speech.
+                ASR_NOINPUT: {
+                  guard: () => !heardThisTurn,
+                  target: "Understanding",
+                  actions: () => {
+                    reportNoContact();
+                  },
+                },
               },
             },
             Understanding: {
