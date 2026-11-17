@@ -218,4 +218,19 @@ describe("DME tests", () => {
     ]);
   });
 
+  // Silence after the answer used to crash: QUD is empty, so there is nothing to downdate.
+  describe("contact failure after the room is known", () => {
+    runTest([
+      { speaker: "sys", message: "Hello! You can ask me anything!" },
+      { speaker: "usr", message: "Where is the lecture?" },
+      { speaker: "sys", message: "Which day?" },
+      { speaker: "usr", message: "Friday" },
+      { speaker: "sys", message: "Which course?" },
+      { speaker: "usr", message: "Dialogue Systems 2" },
+      { speaker: "sys", message: "The lecture is in G212." },
+      { speaker: "usr", message: "(silence)" },
+      { speaker: "sys", message: "Are you there?" },
+    ]);
+  });
+
 });

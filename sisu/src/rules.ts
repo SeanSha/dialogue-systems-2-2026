@@ -176,6 +176,8 @@ export const rules: Rules = {
   /** rule 2.5 */
   downdate_qud: ({ is }) => {
     const q = is.shared.qud[0];
+    // Silence after the room is known leaves QUD empty. The rule does not apply.
+    if (!q) return;
     for (const p of is.shared.com) {
       if (resolves(p, q)) {
         return () => ({
