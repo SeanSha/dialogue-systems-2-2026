@@ -4,6 +4,7 @@ import { KEY, REGION, TOKEN_ENDPOINT } from "./credentials";
 import { DMContext, DMEvents } from "./types";
 import OpenAI from "openai";
 import { QdrantClient } from "@qdrant/js-client-rest";
+import { furstate } from "./furstate/main.ts";
 
 const qdrant = new QdrantClient({ host: "localhost", port: 6333 });
 const RAG_COLLECTION = "gu_support_all"; // 要和你灌库时的名字一致
@@ -201,7 +202,8 @@ ${input.ragContext || "(no documents retrieved)"}
   },
 }).createMachine({
   context: ({ spawn }) => ({
-    spstRef: spawn(speechstate, { input: settings }),
+    // spstRef: spawn(speechstate, { input: settings }),
+    spstRef: spawn(furstate),
     lastResult: null,
     ragContext: "",
     /** 一开始就放一条 system，约束 LLM 回复要短（适合语音） */
@@ -436,18 +438,14 @@ export function setupButton(element: HTMLButtonElement) {
     dmActor.send({ type: "CLICK" });
   });
   dmActor.subscribe((snapshot) => {
-    const meta: { view?: string } = Object.values(
-      snapshot.context.spstRef.getSnapshot().getMeta(),
-    )[0] || {
-      view: undefined,
-    };
     const value = snapshot.value;
+    const view = typeof value === "string" ? value : JSON.stringify(value);
     let hint = "";
     if (value === "WaitToStart") hint = " (click to start)";
     else if (typeof value === "object" && value && "Paused" in value)
       hint = " (click to resume)";
     else if (typeof value === "object" && value && "Loop" in value)
       hint = " (click to pause)";
-    element.innerHTML = `${meta.view ?? ""}${hint}`;
+    element.innerHTML = `${view}${hint}`;
   });
 }
